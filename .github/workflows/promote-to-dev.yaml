@@ -1,4 +1,4 @@
-name: promote release
+name: promote to dev
 
 on:
   push:
