@@ -1,0 +1,27 @@
+name: Publish Release Notes
+
+on:
+  workflow_call:
+
+jobs:
+  publish-release-notes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 24.10.0
+        uses: actions/setup-node@v3
+        with:
+          node-version: '24.10.0'
+
+      - id: run-semantic-release
+        run: |
+          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release
