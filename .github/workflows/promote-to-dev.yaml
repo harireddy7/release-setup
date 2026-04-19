@@ -11,14 +11,6 @@ jobs:
     uses: ./.github/workflows/generate-version.yaml
     secrets: inherit
 
-  log-version:
-    name: Log version
-    needs: generate-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Log version
-        run: "echo \"Generated version: ${{ needs.generate-version.outputs.version }}\""
-
   publish-release-notes:
     name: Publish release notes
     needs: [ generate-version, log-version ]

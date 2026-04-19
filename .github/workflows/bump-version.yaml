@@ -80,6 +80,6 @@ jobs:
         run: |
           PR_NUMBER=${{ steps.pull-request.outputs.pr_number }}
           echo "Merging PR #$PR_NUMBER..."
-          gh pr merge $PR_NUMBER --admin --squash --delete-branch \
+          gh pr merge $PR_NUMBER --admin --rebase --delete-branch \
             --subject "Merge pull request #$PR_NUMBER from ${{ inputs.checkout_branch }} [skip ci]" \
             --body "ci: bump version to ${{ inputs.version }} [skip ci]"
