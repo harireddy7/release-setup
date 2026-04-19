@@ -13,7 +13,7 @@ jobs:
 
   publish-release-notes:
     name: Publish release notes
-    needs: [ generate-version, log-version ]
+    needs: [ generate-version ]
     if: ${{ needs.generate-version.outputs.version != '' }}
     uses: ./.github/workflows/publish-release-notes.yaml
     secrets: inherit
