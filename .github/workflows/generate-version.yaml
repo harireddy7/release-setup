@@ -1,0 +1,35 @@
+name: Generate Version
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: Release version
+        value: ${{ jobs.generate.outputs.version }}
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract-version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node v24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - id: extract-version
+        name: Extract next semantic-release version
+        run: |
+          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --dry-run --verbose > release-temp.log
+          cat release-temp.log
+          echo "version=$(cat release-temp.log | grep -oiP 'the next release version is \K.*')" >> "$GITHUB_OUTPUT"
+
+      - name: Release version - ${{ steps.extract-version.outputs.version }}
+        run: echo "Next release version - ${{ steps.extract-version.outputs.version }}"

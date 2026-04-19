@@ -1,0 +1,85 @@
+name: Bump Version
+
+on:
+  workflow_call:
+    inputs:
+      checkout_branch:
+        description: "Branch to bump version on"
+        required: true
+        type: string
+      version:
+        description: "Bump version"
+        required: true
+        type: string
+      current_version:
+        description: "Current version"
+        required: true
+        type: string
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    if: ${{ inputs.current_version != inputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.checkout_branch }}
+          fetch-depth: 0
+
+      - name: Setup Node v24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Bump package.json version
+        run: |
+          npm pkg set version="${{ inputs.version }}"
+          echo "Bumped to $(node -p "require('./package.json').version")"
+
+      - name: Commit and push feature branch
+        id: commit-feature-branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH_NAME="chore/bump-version-${{ inputs.version }}"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          git checkout -b "$BRANCH_NAME"
+
+          git add package.json
+          git commit -m "ci: bump version to ${{ inputs.version }} [skip ci]"
+          git push -u origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        id: pull-request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr create \
+            --base ${{ inputs.checkout_branch }} \
+            --head ${{ steps.commit-feature-branch.outputs.branch_name }} \
+            --label "auto-merge" \
+            --label "${{ inputs.checkout_branch }}" \
+            --title "ci: bump version to ${{ inputs.version }} [skip ci]" \
+            --body "Automated version bump in \`package.json\` to **${{ inputs.version }}** on **${{ inputs.checkout_branch }}**.
+            This PR was automatically created by the GitHub workflow run - [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          )
+          PR_NUMBER=$(gh pr view "${{ steps.commit-feature-branch.outputs.branch_name }}" --json number -q .number)
+          echo "url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Merge Pull Request
+        if: steps.pull-request.outputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ steps.pull-request.outputs.pr_number }}
+          echo "Merging PR #$PR_NUMBER..."
+          gh pr merge $PR_NUMBER --admin --merge --delete-branch \
+            --subject "Merge pull request #$PR_NUMBER from ${{ inputs.checkout_branch }} [skip ci]" \
+            --body "ci: bump version to ${{ inputs.version }} [skip ci]"

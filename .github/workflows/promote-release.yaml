@@ -1,0 +1,42 @@
+name: promote release
+
+on:
+  push:
+    branches:
+      - release/*
+
+jobs:
+  generate-version:
+    name: Generate version
+    uses: ./.github/workflows/generate-version.yaml
+    secrets: inherit
+
+  log-version:
+    name: Log version
+    needs: generate-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log version
+        run: "echo \"Generated version: ${{ needs.generate-version.outputs.version }}\""
+
+  publish-release-notes:
+    name: Publish release notes
+    needs: [ generate-version, log-version ]
+    if: ${{ needs.generate-version.outputs.version != '' }}
+    uses: ./.github/workflows/publish-release-notes.yaml
+    secrets: inherit
+
+  get-current-version:
+    name: Get version
+    needs: [ publish-release-notes ]
+    uses: ./.github/workflows/get-version.yaml
+
+  bump-version:
+    name: Bump version
+    needs: [ generate-version, get-current-version ]
+    uses: ./.github/workflows/bump-version.yaml
+    secrets: inherit
+    with:
+      checkout_branch: ${{ github.ref_name }}
+      version: ${{ needs.generate-version.outputs.version }}
+      current_version: ${{ needs.get-current-version.outputs.version }}
