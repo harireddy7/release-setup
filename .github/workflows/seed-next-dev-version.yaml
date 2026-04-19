@@ -24,7 +24,7 @@ jobs:
 
       - name: Create dev seed tag
         run: |
-          TAG="${{ inputs.next_version }}-dev.0"
+          TAG="v${{ inputs.next_version }}-dev.0"
           echo "Creating tag $TAG"
           git tag $TAG
           git push origin $TAG
