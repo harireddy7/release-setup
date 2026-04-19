@@ -1,0 +1,25 @@
+name: Get Version
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: Release version
+        value: ${{ jobs.get-version.outputs.version }}
+
+jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract-version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: extract-version
+        name: Extract version from package.json
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "version = $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
