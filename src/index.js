@@ -1,2 +1,1 @@
-console.log('Hello, World - 2.1.0-dev.*');
-console.log('This is a pre-release version with the "dev" tag.');
+console.log('Prerelease app - 1.0.0-dev.2');
