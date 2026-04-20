@@ -4,10 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       release_branch:
-        description: "Release branch name (e.g., release/1.0.0)"
+        description: "Release branch name (e.g., release/2.0.0)"
         required: true
+      release_type:
+        description: "Release type"
+        required: true
+        default: "minor"
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
       next_release:
-        description: "Next release version (e.g., 1.1.0)"
+        description: "Next release version for dev (e.g., 2.1.0)"
         required: true
 
 jobs:
@@ -31,8 +40,18 @@ jobs:
 
       - name: Create and push release branch
         run: |
-          git checkout -b ${{ inputs.release_branch }}
-          git push origin ${{ inputs.release_branch }}
+          git checkout -b "${{ inputs.release_branch }}"
+          RELEASE_VERSION="${{ inputs.release_branch }}"
+          RELEASE_VERSION="${RELEASE_VERSION#release/}"
+
+          if [[ "${{ inputs.release_type }}" == "major" ]]; then
+            git commit --allow-empty -m "feat: release ${RELEASE_VERSION}" -m "BREAKING CHANGE: release ${RELEASE_VERSION}"
+          elif [[ "${{ inputs.release_type }}" == "minor" ]]; then
+            git commit --allow-empty -m "feat: release ${RELEASE_VERSION}"
+          else
+            git commit --allow-empty -m "fix: release ${RELEASE_VERSION}"
+          fi
+          git push origin "${{ inputs.release_branch }}"
           echo "Created release branch: ${{ inputs.release_branch }}"
 
       - name: Checkout back to dev
