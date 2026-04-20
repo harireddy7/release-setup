@@ -40,7 +40,7 @@ jobs:
 
       - name: Merge main into dev
         run: |
-          git merge origin/main --no-edit
+          git merge origin/main --no-edit --strategy-option ours
           echo "Merged main into dev to ensure stable tag is reachable"
 
       - name: Create and push release branch
