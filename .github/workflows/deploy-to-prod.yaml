@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout release branch
@@ -41,10 +42,16 @@ jobs:
           echo "=== RC tags for v${RELEASE_VERSION} ==="
           git tag --merged HEAD --sort=-v:refname | grep "^v${RELEASE_VERSION}-rc\." || echo "No rc tags found"
 
-      - name: Merge release branch into main
+      - name: Create PR from release branch to main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git fetch origin main
-          git checkout main
-          git merge "${{ inputs.release_branch }}" --no-edit --strategy-option theirs
-          git push origin main
-          echo "Merged ${{ inputs.release_branch }} → main"
+          RELEASE_VERSION="${{ inputs.release_branch }}"
+          RELEASE_VERSION="${RELEASE_VERSION#release/}"
+          gh pr create \
+            --base main \
+            --head "${{ inputs.release_branch }}" \
+            --title "Release v${RELEASE_VERSION}" \
+            --body "Merging \`${{ inputs.release_branch }}\` into \`main\` to publish stable release \`v${RELEASE_VERSION}\`." \
+            --label "release" \
+            --label "$RELEASE_VERSION"
