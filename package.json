@@ -1,6 +1,6 @@
 {
   "name": "release-setup",
-  "version": "1.0.0-dev.3",
+  "version": "2.0.0-dev.0",
   "description": "",
   "main": "index.js",
   "scripts": {
