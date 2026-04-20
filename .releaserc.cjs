@@ -1,5 +1,5 @@
 // GitHub Releases API maximum body length
-const GITHUB_RELEASE_BODY_MAX_LENGTH = 125000;
+const GITHUB_RELEASE_BODY_MAX_LENGTH = 100000;
 const CHARS_PER_COMMIT = 200; // conservative estimate per rendered commit line
 
 const branches = JSON.parse(process.env.RELEASE_BRANCHES || 'null') || [
@@ -38,7 +38,7 @@ module.exports = {
       '@semantic-release/github',
       {
         successCommentCondition: false,
-        failComment: false,
+        failCommentCondition: false,
       },
     ],
   ],
