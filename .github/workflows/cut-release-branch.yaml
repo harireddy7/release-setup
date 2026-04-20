@@ -1,0 +1,63 @@
+name: Cut Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Release branch name (e.g., release/1.0.0)"
+        required: true
+      next_release:
+        description: "Next release version (e.g., 1.1.0)"
+        required: true
+
+jobs:
+  cut-release-branch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push release branch
+        run: |
+          git checkout -b ${{ inputs.release_branch }}
+          git push origin ${{ inputs.release_branch }}
+          echo "Created release branch: ${{ inputs.release_branch }}"
+
+      - name: Checkout back to dev
+        run: |
+          git checkout dev
+
+      - name: Setup Node v24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Bump package.json version on dev
+        run: |
+          npm pkg set version="${{ inputs.next_release }}-dev.0"
+          echo "Bumped dev to $(node -p "require('./package.json').version")"
+
+      - name: Commit version bump to dev
+        run: |
+          git add package.json
+          git commit -m "chore: seed next release version ${{ inputs.next_release }}"
+          git push origin dev
+
+      - name: Create dev seed tag
+        run: |
+          TAG="v${{ inputs.next_release }}-dev.0"
+          echo "Creating tag $TAG"
+          git tag $TAG
+          git push origin $TAG
