@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Use Node.js 24.10.0
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "24.10.0"
 
@@ -26,8 +26,9 @@ jobs:
         run: |
           IS_RELEASE="${{ startsWith(github.ref_name, 'release/') }}"
           if [[ "${IS_RELEASE}" == 'true' ]]; then
-            branches="[{"name":"main"},{"name":"dev","prerelease":"dev"},{"name":"${{ github.ref_name }}","prerelease":"rc"}]"
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$branches"
-          else
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release
+            RELEASE_BRANCH="${{ github.ref_name }}"
+            jq --arg branch "$RELEASE_BRANCH" \
+              '.branches += [{name: $branch, prerelease: "rc"}]' \
+              .releaserc.json > .releaserc.tmp.json && mv .releaserc.tmp.json .releaserc.json
           fi
+          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release

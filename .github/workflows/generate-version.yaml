@@ -26,15 +26,15 @@ jobs:
 
       - id: extract-version
         name: Extract next semantic-release version
-        env:
-          RELEASE_BRANCHES: '[{"name":"main"},{"name":"dev","prerelease":"dev"}]'
         run: |
           IS_RELEASE="${{ startsWith(github.ref_name, 'release/') }}"
           if [[ "${IS_RELEASE}" == 'true' ]]; then
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$RELEASE_BRANCHES" --debug --dry-run --verbose > release-temp.log
-          else
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$RELEASE_BRANCHES" --debug --dry-run --verbose > release-temp.log
+            RELEASE_BRANCH="${{ github.ref_name }}"
+            jq --arg branch "$RELEASE_BRANCH" \
+              '.branches += [{name: $branch, prerelease: "rc"}]' \
+              .releaserc.json > .releaserc.tmp.json && mv .releaserc.tmp.json .releaserc.json
           fi
+          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --debug --dry-run --verbose > release-temp.log
           cat release-temp.log
           echo "version=$(cat release-temp.log | grep -oiP 'the next release version is \K.*')" >> "$GITHUB_OUTPUT"
 
