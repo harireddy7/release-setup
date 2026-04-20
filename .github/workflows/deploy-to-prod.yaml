@@ -1,0 +1,50 @@
+name: Deploy to Prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Release branch to deploy (e.g., release/2.0.0)"
+        required: true
+
+jobs:
+  deploy-to-prod:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_branch }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Log git tags on branch
+        run: |
+          RELEASE_VERSION="${{ inputs.release_branch }}"
+          RELEASE_VERSION="${RELEASE_VERSION#release/}"
+
+          echo "=== All tags reachable from ${{ inputs.release_branch }} ==="
+          git tag --merged HEAD --sort=-v:refname
+
+          echo ""
+          echo "=== Most recent tag ==="
+          git describe --tags --abbrev=0
+
+          echo ""
+          echo "=== RC tags for v${RELEASE_VERSION} ==="
+          git tag --merged HEAD --sort=-v:refname | grep "^v${RELEASE_VERSION}-rc\." || echo "No rc tags found"
+
+      - name: Merge release branch into main
+        run: |
+          git fetch origin main
+          git checkout main
+          git merge "${{ inputs.release_branch }}" --no-edit --strategy-option theirs
+          git push origin main
+          echo "Merged ${{ inputs.release_branch }} → main"
