@@ -23,11 +23,17 @@ jobs:
           node-version: "24.10.0"
 
       - id: run-semantic-release
+        env:
+          RELEASE_BRANCHES: |
+            [
+              {"name":"main"},
+              {"name":"dev","prerelease":"dev"},
+              {"name":"${{ github.ref_name }}","prerelease":"rc"}
+            ]
         run: |
           IS_RELEASE="${{ startsWith(github.ref_name, 'release/') }}"
           if [[ "${IS_RELEASE}" == 'true' ]]; then
-            branches='[{"name":"main"},{"name":"dev","prerelease":"dev"},{"name":"${{ github.ref_name }}","prerelease":"rc"}]'
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$branches"
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches ${{ env.RELEASE_BRANCHES }} --debug --verbose
           else
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --debug --verbose
           fi
