@@ -33,7 +33,7 @@ jobs:
           IS_RELEASE="${{ startsWith(github.ref_name, 'release/') }}"
           if [[ "${IS_RELEASE}" == 'true' ]]; then
             branches='[{"name":"main"},{"name":"dev","prerelease":"dev"},{"name":"${{ github.ref_name }}","prerelease":"rc"}]'
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$branches" --dry-run --verbose > release-temp.log
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$branches" --dry-run --debug --verbose > release-temp.log
           else
             GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --dry-run --verbose > release-temp.log
           fi
