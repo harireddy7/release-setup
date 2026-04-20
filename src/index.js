@@ -1,1 +1,1 @@
-console.log('Prerelease app - 1.0.0-dev.2');
+console.log('Prerelease app - 2.0.0-dev.2');

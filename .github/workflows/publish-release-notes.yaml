@@ -23,12 +23,8 @@ jobs:
           node-version: "24.10.0"
 
       - id: run-semantic-release
+        name: Publish release notes
+        env:
+          RELEASE_BRANCHES: ${{ startsWith(github.ref_name, 'release/') && format('[{{"name":"main"}},{{"name":"dev","prerelease":"dev"}},{{"name":"{0}","prerelease":"rc"}}]', github.ref_name) || '' }}
         run: |
-          IS_RELEASE="${{ startsWith(github.ref_name, 'release/') }}"
-          if [[ "${IS_RELEASE}" == 'true' ]]; then
-            RELEASE_BRANCH="${{ github.ref_name }}"
-            jq --arg branch "$RELEASE_BRANCH" \
-              '.branches += [{name: $branch, prerelease: "rc"}]' \
-              .releaserc.json > .releaserc.tmp.json && mv .releaserc.tmp.json .releaserc.json
-          fi
-          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release
+          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --debug --verbose
