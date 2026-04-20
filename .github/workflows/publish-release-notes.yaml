@@ -6,6 +6,8 @@ on:
 jobs:
   publish-release-notes:
     runs-on: ubuntu-latest
+    env:
+      SEMANTIC_RELEASE_BRANCHES: '[{"name":"main"},{"name":"dev","prerelease":"dev"},{"name":"${{ github.ref_name }}","prerelease":"rc"}]'
     permissions:
       contents: write
       issues: write
@@ -24,4 +26,4 @@ jobs:
 
       - id: run-semantic-release
         run: |
-          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release
+          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$SEMANTIC_RELEASE_BRANCHES"

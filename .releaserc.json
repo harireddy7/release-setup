@@ -6,10 +6,6 @@
     {
       "name": "dev",
       "prerelease": "dev"
-    },
-    {
-      "name": "release/*",
-      "prerelease": "rc"
     }
   ],
   "plugins": [
