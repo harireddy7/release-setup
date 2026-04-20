@@ -10,8 +10,6 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    env:
-      SEMANTIC_RELEASE_BRANCHES: '[{"name":"main"},{"name":"dev","prerelease":"dev"},{"name":"${{ github.ref_name }}","prerelease":"rc"}]'
     outputs:
       version: ${{ steps.extract-version.outputs.version }}
 
@@ -32,7 +30,13 @@ jobs:
       - id: extract-version
         name: Extract next semantic-release version
         run: |
-          GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$SEMANTIC_RELEASE_BRANCHES" --dry-run --verbose > release-temp.log
+          IS_RELEASE="${{ startsWith(github.ref_name, 'release/') }}"
+          if [[ "${IS_RELEASE}" == 'true' ]]; then
+            branches="[{"name":"main"},{"name":"dev","prerelease":"dev"},{"name":"${{ github.ref_name }}","prerelease":"rc"}]"
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$branches" --dry-run --verbose > release-temp.log
+          else
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --dry-run --verbose > release-temp.log
+          fi
           cat release-temp.log
           echo "version=$(cat release-temp.log | grep -oiP 'the next release version is \K.*')" >> "$GITHUB_OUTPUT"
 
