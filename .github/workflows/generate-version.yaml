@@ -30,16 +30,11 @@ jobs:
       - id: extract-version
         name: Extract next semantic-release version
         env:
-          RELEASE_BRANCHES: |
-            [
-              {"name":"main"},
-              {"name":"dev","prerelease":"dev"},
-              {"name":"${{ github.ref_name }}","prerelease":"rc"}
-            ]
+          RELEASE_BRANCHES: '[{"name":"main"},{"name":"dev","prerelease":"dev"},{"name":"${{ github.ref_name }}","prerelease":"rc"}]'
         run: |
           IS_RELEASE="${{ startsWith(github.ref_name, 'release/') }}"
           if [[ "${IS_RELEASE}" == 'true' ]]; then
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches ${{ env.RELEASE_BRANCHES }} --debug --dry-run --verbose > release-temp.log
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --branches "$RELEASE_BRANCHES" --debug --dry-run --verbose > release-temp.log
           else
             GH_TOKEN=${{ secrets.GITHUB_TOKEN }} npx semantic-release --debug --dry-run --verbose > release-temp.log
           fi
