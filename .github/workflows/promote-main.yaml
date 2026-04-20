@@ -1,0 +1,34 @@
+name: promote to main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate-version:
+    name: Generate version
+    uses: ./.github/workflows/generate-version.yaml
+    secrets: inherit
+
+  publish-release-notes:
+    name: Publish release notes
+    needs: [ generate-version ]
+    if: ${{ needs.generate-version.outputs.version != '' }}
+    uses: ./.github/workflows/publish-release-notes.yaml
+    secrets: inherit
+
+  get-current-version:
+    name: Get version
+    needs: [ publish-release-notes ]
+    uses: ./.github/workflows/get-version.yaml
+
+  bump-version:
+    name: Bump version
+    needs: [ generate-version, get-current-version ]
+    uses: ./.github/workflows/bump-version.yaml
+    secrets: inherit
+    with:
+      checkout_branch: main
+      version: ${{ needs.generate-version.outputs.version }}
+      current_version: ${{ needs.get-current-version.outputs.version }}
